@@ -13,7 +13,9 @@ namespace IXISim.Simulation
         NetLinkConnected,
         NetLinkDisconnected,
         NodeAdded,
-        NodeRemoved
+        NodeRemoved,
+        NetworkMessageLost,
+        NetworkMessageTransmitted
     }
     struct SimulationEvent
     {
@@ -109,6 +111,7 @@ namespace IXISim.Simulation
                             }
                         }
                     }
+                    System.Diagnostics.Trace.WriteLine(logmessage);
                 }
             }
         }

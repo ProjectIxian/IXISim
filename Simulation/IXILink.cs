@@ -6,6 +6,23 @@ using System.Threading.Tasks;
 
 namespace IXISim.Simulation
 {
+    enum NetworkMessageType
+    {
+        Hello,
+        HelloReply,
+        GetBlock,
+        BlockData,
+        GetTransactions,
+        TransactionData
+    }
+
+    struct NetworkMessage
+    {
+        public NetworkMessageType Type;
+        public ulong BlockData;
+        public ulong ArrivesOnTick;
+    }
+
     class IXILink
     {
         public ulong ID { get; private set; }
@@ -14,6 +31,9 @@ namespace IXISim.Simulation
 
         public ulong LatencyTicks { get; private set; }
         public double Reliability { get; private set; }
+
+        private Queue<NetworkMessage> Messages;
+        private bool Disconnected;
 
         public String GetDescription()
         {
@@ -26,6 +46,8 @@ namespace IXISim.Simulation
         public IXILink(ulong from, ulong to, double reliability = -1, ulong latency = 0)
         {
             ID = SimulationController.Instance.GetNextID();
+            Disconnected = false;
+            Messages = new Queue<NetworkMessage>();
             From = from;
             To = to;
             if(reliability > 0)
@@ -55,9 +77,68 @@ namespace IXISim.Simulation
             }
         }
 
+        public void Disconnect()
+        {
+            Disconnected = true;
+        }
+
+        public void SendMessage(NetworkMessageType type, ulong block_data = 0)
+        {
+            // check reliability
+            if(SimulationController.Instance.RNG.NextDouble() > Reliability)
+            {
+                SimulationController.Instance.Events.AddEvent(new SimulationEvent()
+                {
+                    Type = EventType.NetworkMessageLost,
+                    ObjectName = String.Format("Message({0} -> {1}; Link {2})", From, To, ID),
+                    Message = "Network message was lost during transit."
+                });
+            } else
+            {
+                Messages.Enqueue(new NetworkMessage()
+                {
+                    Type = type,
+                    BlockData = block_data,
+                    ArrivesOnTick = SimulationController.Instance.CurrentTick + LatencyTicks
+                });
+            }
+        }
+
         public void Update()
         {
+            CheckDisconnect();
+            if (Disconnected)
+            {
+                SimulationController.Instance.DropLink(ID);
+            }
+            else
+            {
+                Transmit();
+            }
+        }
 
+        private void CheckDisconnect()
+        {
+            // if either end of the connection is gone
+            if(!SimulationController.Instance.NodeExists(From) || !SimulationController.Instance.NodeExists(To))
+            {
+                Disconnected = true;
+            }
+        }
+
+        private void Transmit()
+        {
+            while(Messages.Count > 0 && Messages.Peek().ArrivesOnTick <= SimulationController.Instance.CurrentTick)
+            {
+                NetworkMessage msg = Messages.Dequeue();
+                SimulationController.Instance.Events.AddEvent(new SimulationEvent()
+                {
+                    Type = EventType.NetworkMessageTransmitted,
+                    ObjectName = String.Format("Message({0} -> {1}; Link {2})", From, To, ID),
+                    Message = String.Format("Message: {0}, BlockData: {1}", msg.Type.ToString(), msg.BlockData)
+                });
+                SimulationController.Instance.GetNode(To).IncomingMessage(From, msg);
+            }
         }
     }
 }

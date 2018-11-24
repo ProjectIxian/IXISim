@@ -24,6 +24,7 @@ namespace IXISim.Simulation
         public ulong TXPoolSize { get; private set; }
 
         public NodeState State { get; private set; }
+        private Queue<(ulong, NetworkMessage)> IncomingMessages;
 
         public String GetDescription()
         {
@@ -60,11 +61,18 @@ namespace IXISim.Simulation
             RedactedBottom = 0;
             RedactedTop = 0;
             TXPoolSize = 0;
+            IncomingMessages = new Queue<(ulong, NetworkMessage)>();
+        }
+
+        public void IncomingMessage(ulong from, NetworkMessage msg)
+        {
+            IncomingMessages.Enqueue((from, msg));
         }
 
         public void Update()
         {
             // TODO
+
         }
     }
 }

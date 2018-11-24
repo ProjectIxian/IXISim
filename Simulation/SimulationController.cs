@@ -212,6 +212,42 @@ namespace IXISim.Simulation
             }
         }
 
+        public void DropLink(ulong id)
+        {
+            lock (DeadLinks_Lock)
+            {
+                DeadLinks.Enqueue(id);
+            }
+        }
+
+        public void DropNode(ulong id)
+        {
+            lock (DeadNodes_Lock)
+            {
+                DeadNodes.Enqueue(id);
+            }
+        }
+
+        public bool NodeExists(ulong id)
+        {
+            return SimulatedNodes.ContainsKey(id);
+        }
+
+        public IXINode GetNode(ulong id)
+        {
+            return SimulatedNodes[id];
+        }
+
+        public IXILink GetLink(ulong id)
+        {
+            return SimulatedLinks[id];
+        }
+
+        public IXILink GetLink(ulong node_from, ulong node_to)
+        {
+            return SimulatedLinks.Values.Where(x => x.From == node_from && x.To == node_to).First();
+        }
+
         private void MasterThreadLoop()
         {
             while (true)
@@ -315,22 +351,6 @@ namespace IXISim.Simulation
                         SimulatedNodes.Add(n.ID, n);
                     }
                 }
-            }
-        }
-
-        private void AddDeadLink(ulong id)
-        {
-            lock(DeadLinks_Lock)
-            {
-                DeadLinks.Enqueue(id);
-            }
-        }
-
-        private void AddDeadNode(ulong id)
-        {
-            lock(DeadNodes_Lock)
-            {
-                DeadNodes.Enqueue(id);
             }
         }
 
