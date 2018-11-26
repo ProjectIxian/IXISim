@@ -15,7 +15,12 @@ namespace IXISim.Simulation
         NodeAdded,
         NodeRemoved,
         NetworkMessageLost,
-        NetworkMessageTransmitted
+        NetworkMessageTransmitted,
+        NodeSyncFailed,
+        NodeSyncSuccess,
+        NodeStateChange,
+        NodeProcessingEvent,
+        NodeAcceptedBlock
     }
     struct SimulationEvent
     {

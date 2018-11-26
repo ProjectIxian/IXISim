@@ -20,6 +20,8 @@ namespace IXISim.Simulation
     {
         public NetworkMessageType Type;
         public ulong BlockData;
+        public ulong Amount;
+        public HashSet<ulong> Signers;
         public ulong ArrivesOnTick;
     }
 
@@ -82,7 +84,7 @@ namespace IXISim.Simulation
             Disconnected = true;
         }
 
-        public void SendMessage(NetworkMessageType type, ulong block_data = 0)
+        public void SendMessage(NetworkMessageType type, ulong block_data = 0, ulong amount = 0, HashSet<ulong> sigs = null)
         {
             // check reliability
             if(SimulationController.Instance.RNG.NextDouble() > Reliability)
@@ -99,6 +101,8 @@ namespace IXISim.Simulation
                 {
                     Type = type,
                     BlockData = block_data,
+                    Amount = amount,
+                    Signers = sigs,
                     ArrivesOnTick = SimulationController.Instance.CurrentTick + LatencyTicks
                 });
             }

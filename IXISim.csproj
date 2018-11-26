@@ -61,7 +61,6 @@
     <Compile Include="Simulation\EventBuffer.cs" />
     <Compile Include="Simulation\IXILink.cs" />
     <Compile Include="Simulation\IXINode.cs" />
-    <Compile Include="Simulation\ProtocolMessage.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -55,6 +55,7 @@ namespace IXISim.Simulation
         private readonly Object Simulation_lock = new Object();
         private Dictionary<ulong, IXINode> SimulatedNodes;
         private Dictionary<ulong, IXILink> SimulatedLinks;
+        public ulong NetworkConsensus { get; private set; }
         // Upkeep stuff
         private readonly Object DeadLinks_Lock = new Object();
         private Queue<ulong> DeadLinks;
@@ -196,6 +197,15 @@ namespace IXISim.Simulation
             }
         }
 
+        public IXINode[] GetAllNeighbors(ulong node_id)
+        {
+            lock(Simulation_lock)
+            {
+                return SimulatedLinks.Values.Where(x => x.To == node_id || x.From == node_id)
+                    .Select(l => l.To == node_id ? SimulatedNodes[l.From] : SimulatedNodes[l.To]).ToArray();
+            }
+        }
+
         public void AddNode(IXINode n)
         {
             lock(NewNodes_Lock)
@@ -248,6 +258,12 @@ namespace IXISim.Simulation
             return SimulatedLinks.Values.Where(x => x.From == node_from && x.To == node_to).First();
         }
 
+        public ulong PickRandomNode()
+        {
+            int random_id = RNG.Next(SimulatedNodes.Keys.Count);
+            return SimulatedNodes.Keys.ElementAt(random_id);
+        }
+
         private void MasterThreadLoop()
         {
             while (true)
@@ -259,6 +275,7 @@ namespace IXISim.Simulation
                 }
                 PerformTick = false;
                 CurrentTick = CurrentTick + 1;
+                NetworkConsensus = (ulong)SimulatedNodes.Values.Where(x => x.State == NodeState.Operating).Count();
                 UpdateLinks();
                 UpdateNodes();
                 Upkeep();
